@@ -1,4 +1,3 @@
-
 # ------------------------------------------------------------------------
 # Card Game War
 # Scenario by: Patrick, R.
@@ -70,7 +69,7 @@ class warGame:
                     index = 4 # Start index
                     
                     # Until tie broken
-                    while comparion == 0:
+                    while comparison == 0:
                         tie_cards = [[], []] # Initialise tie cards
                         for player in players:
                             for i in range((index + 1) - 4, index + 1): # Draw four cards
@@ -87,6 +86,10 @@ class warGame:
             # If tie draw 4 cards, compare 4th card, then delete & add cards respectively
             # Check if either player has 0 cards, if yes say player x wins end loop.
             pass
+        pass
+
+    def tie_breaker():
+        pass
 
     def check_winner(players):
         for player in players:
