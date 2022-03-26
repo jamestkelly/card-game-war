@@ -11,7 +11,7 @@ Credit to [gigasquid's/wonderland-clojure-katas](https://github.com/gigasquid/wo
 
 The rules of this card game are quite simple.
 
-### Base Game
+### Base Game Rules
 
 - There are two players.
 - The cards are all dealt equally to each player.
@@ -23,7 +23,7 @@ The rules of this card game are quite simple.
 - If both cards are of equal value - three cards are dealt from each hand face down and then 1 more face up to war again. the winner takes all the cards. If this ties repeat the process again.
 - The player that runs out of cards loses.
 
-### Extended Game
+### Extended Game Rules
 
 - Extend the game to N players
 - If you capture a King, the all players must give you 4 extra cards.
@@ -56,6 +56,12 @@ pytest -vv
 # or to run continuously
 ptw -- -vv
 ```
+
+## Future Development
+
+- Implement full functionality for `N` players to be able to compete.
+- Improve time complexity.
+- Implement additional rules as outlined in the [extended game rules](#extended-game-rules).
 
 ## Acknowledgements
 
