@@ -1,217 +1,160 @@
-# ------------------------------------------------------------------------
-# Card Game War
-# Scenario by: Patrick, R.
-# Solution by: Jim, K.
-# ------------------------------------------------------------------------
-# Instructions & To Do
-# ------------------------------------------------------------------------
-# Original Game
-# - Two players [X]
-# - The cards are all dealt equally to each player [X]
-# - Each round, Player 1 lays a card down face up at the same time that
-#       Player 2 lays a card down face up. Whoever has the highest value
-#       card, wins both the round and both cards, i.e. winner takes both
-#       cards. [ ]
-# - Winning cards are added to the bottom of the winner's deck. [ ]
-# - Aces are considered "high", i.e. a value of 14. [X]
-# - If both cards are of equal value, then three cards are dealt from each
-#       hand face down. Then, one more card is dealt face up to 'war'. The
-#       winner takes all of the cards (the 4 dealt from their oponent). If
-#       this results in a tie, then the process is repeated again. [ ]
-# - The player that runs out of cards first loses. [ ]
-# ------------------------------------------------------------------------
-# Extended Game | Additional Rules
-# - The game can be played with N players [X]
-# - If you capture a King (13), then all players must give you 4 extra
-#       cards. [ ]
-# - If you capture a Queen (12), then you must give all opponents 4 extra
-#       cards. [ ]
-# - If a King takes a Queen of the same suit, then that player wins. [ ]
+'''---------------------------------------------------------------------
+Card Game War
+Scenario by: Patrick, R.
+Solution by: Jim, K.
+------------------------------------------------------------------------
+Game Rules & To Do
+------------------------------------------------------------------------
+Base Game Rules
+- Two players [X]
+- The cards are all dealt equally to each player [X]
+- Each round, Player 1 lays a card down face up at the same time that
+       Player 2 lays a card down face up. Whoever has the highest value
+       card, wins both the round and both cards, i.e. winner takes both
+       cards. [X]
+- Winning cards are added to the bottom of the winner's deck. [X]
+- Aces are considered "high", i.e. a value of 14. [X]
+- If both cards are of equal value, then three cards are dealt from each
+    hand face down. Then, one more card is dealt face up to 'war'. The
+    winner takes all of the cards (the 4 dealt from their oponent). If
+    this results in a tie, then the process is repeated again. [X]
+- The player that runs out of cards first loses. [X]
+------------------------------------------------------------------------
+Extended Game Rules
+- The game can be played with N players [ ]
+- If you capture a King (13), then all players must give you 4 extra
+    cards. [ ]
+- If you capture a Queen (12), then you must give all opponents 4 extra
+    cards. [ ]
+- If a King takes a Queen of the same suit, then that player wins. [ ]
+------------------------------------------------------------------------'''
 
 import itertools, random
 
-class warGame:
+class war_game:
     def __init__(self):
-        self.play_round(2)
+        deck = self.generate_deck()
+        random.shuffle(deck)
+        players = self.deal_cards(deck, 2)
+        self.player_one, self.player_two = players[0], players[1]
+        self.round_cards = []
+        self.buffer = []
+        self.round = 1
+        self.players = players
 
-    def play_round(num_players):
-        deck = warGame.shuffle_deck(warGame.initialise_deck())
-        players = warGame.deal(deck, warGame.initialise_players(num_players))
-        return warGame.make_turn(num_players, players)
-        
-    def make_turn(num_players, players):
-        if num_players == 2:
-            warGame.base_turn(players)
-            return True
-        else:
-            #return warGame.extended_turn(players)
-            pass
-
-    def base_turn(players):
-        is_winner = False
-        round_counter = 1
-        
-        while is_winner == False:
-            print("Begin round", round_counter)
-            cards = [] # Initialise cards array
-            
-            # Draw cards
-            for player in players:
-                cards[player] = warGame.get_card(players[player], 0)
-                players[player] = warGame.pop_card(players[player])
-                print("Player", player, "draws:", cards[player])
-            
-            # Compare cards
-            comparison = warGame.compare_cards(cards[0], cards[1])
-            
-            # Determine win or tie
-            match comparison:
-                case 1: # Player 1 wins
-                    players[0] = warGame.player_winner(0, cards, players)
-                    print("Player 1 wins round", round_counter, ".")
-                case -1: # Player 2 wins
-                    players[1] = warGame.player_winner(1, cards, players)
-                    print("Player 2 wins round", round_counter, ".")
-                case 0: # Tie
-                    print("It's a tie! Initialising tie breaker.")
-                    is_winner = warGame.tie_breaker_check(players) # Check both players have enough cards
-                    
-                    buffer = warGame.initialise_buffer()
-                    index = 4 # Start index
-                    
-                    # Until tie broken
-                    while comparison == 0:
-                        tie_cards = [[], []] # Initialise tie cards
-                        for player in players:
-                            for i in range(4): # Draw four cards
-                                tmp_card = warGame.get_card(players[player], 0)
-                                players[player] = warGame.pop_card(players[player])
-                                tie_cards[player].append(tmp_card)
-                        
-                        temp_compare = warGame.compare_cards(tie_cards[0][3], tie_cards[1][3])
-                        buffer = warGame.buffer_helper(tie_cards, buffer)
-                        
-                        if temp_compare == 1:
-                            players = warGame.tie_winner(0, buffer, players)
-                            comparison = temp_compare
-                        if temp_compare == -1:
-                            players = warGame.tie_winner(1, buffer, players)
-                            comparison = temp_compare
-
-            # Check if either player has 0 cards, if yes say player x wins end loop.
-            is_winner = warGame.check_winner(players)
+    def generate_deck(self):
+        deck = list(itertools.product(range(2, 15), ['Spade', 'Heart', 'Diamond', 'Club']))
+        return sorted(deck, key=lambda tup: tup[0])
+    
+    def generate_players(self, num_players):
+        players = []
+        for i in range(num_players):
+            if i < 52: # Edge case where more players than cards are entered
+                players.append(list())
             
         return players
     
-    def initialise_buffer(cards):
-        buffer = [[], []]
+    def deal_cards(self, deck, num_players):
+        player_ID = 0 # Initialise player to be dealt to as Player 1, index 0
+        players = self.generate_players(num_players)
         
-        for card in cards:
-            buffer[card].append(cards[card])
+        for card in deck:
+            if player_ID == num_players:
+                player_ID = 0 # Reset player to be dealt to
             
-        return buffer
-    
-    def player_winner(winner, cards, players):
-        for card in cards:
-            players[winner].append(card)
+            players[player_ID].append(card)
+            player_ID = player_ID + 1
             
         return players
     
-    def tie_winner(winner, buffer, players):
-        print("Player", winner, "wins the tie breaker!")
-        for player in players:
-            if player == winner:
-                for i in len(buffer):
-                    for j in len(buffer[player]):
-                        players[player].append(buffer[player][j])
-                        
-        return players
+    def compare_cards(self, card_a, card_b):
+        if card_a[0] > card_b[0]:
+            return 1
+        if card_a[0] == card_b[0]:
+            return 0
+        if card_a[0] < card_b[0]:
+            return -1
     
-    def tie_breaker_check(players):
-        loser = None
+    def play_round(self, num_players):
+        if self.win_check(): # Check for a winner
+            return self.game_over()
         
-        for player in players:
-            if len(player) < 4:
-                loser = player
+        print("Round #" + str(self.round))
         
-        if loser == 0:
-            print("Player 1 does not have enough cards to tie break.\n \
-                  Player 2 wins!")
-        elif loser == 1:
-            print("Player 2 does not have enough cards to tie break.\n \
-                  Player 1 wins!")
-        else:
-            return False
-            
+        for i in range(len(self.players)):
+            self.round_cards.append(self.players[i].pop(0))
+        
+        card_one, card_two = self.player_one.pop(0), self.player_two.pop(0)
+        print("Player 1 plays", card_one, "face up.\tPlayer 2 plays", card_two, "face up.")
+        battle_result = self.compare_cards(card_one, card_two)
+        
+        match battle_result:
+            case 0: # Tie
+                print("The round is a tie! Initialising tie breaker.")
+                if self.win_check():
+                    return self.game_over()
+                
+                if self.tie_check():
+                    return self.tie_default()
+                
+                temp_buffer = list()
+                for i in range(3):
+                    for player in range(num_players):
+                        if player == 0:
+                            card = self.player_one.pop(0)
+                        elif player == 1:
+                            card = self.player_two.pop(0)
+
+                        temp_buffer.append(card)
+                
+                print("Player 1 & 2 place three cards face down.")
+                self.buffer.extend(temp_buffer)
+                return self.play_round(num_players)
+                
+            case 1: # Player 1 wins the round
+                print("Player 1 wins the round!")
+                self.player_one.extend([card_one, card_two])
+                self.player_one.extend(self.buffer)
+                self.buffer = []
+            case -1: # Player 2 wins the round
+                print("Player 2 wins the round!")
+                self.player_two.extend([card_one, card_two])
+                self.player_two.extend(self.buffer)
+                self.buffer = []
+        
+        self.round = self.round + 1 # Increment the round counter
         return True
     
-    def buffer_helper(tie_cards, buffer):
-        for player in buffer:
-            for card in tie_cards[player]:
-                buffer[player].append(card)
-                
-        return buffer
-                
+    def tie_check(self):
+        if len(self.player_one) < 4 or len(self.player_two) < 4:
+            return True
+        
+    def tie_default(self):
+        if len(self.player_two) < len(self.player_one):
+            print("Player 2 does not have enough cards to tie break. Player 1 wins by default!")
+        elif len(self.player_two) > len(self.player_one):
+            print("Player 1 does not have enough cards to tie break. Player 2 wins by default!")
+        else:
+            print("It's a tie!")
 
-    def check_winner(players):
-        for player in players:
-            if len(player) == 0:
-                print(player + 1, "wins!")
-                return True
+        return False
+    
+    def win_check(self):
+        if len(self.player_one) == 0 or len(self.player_two) == 0:
+            return True
+        
+    def game_over(self):
+        if len(self.player_two) == 0:
+            if len(self.player_one) == 0:
+                print("The game is a tie!")
+            else:
+                print("Player 1 wins the game!")
+        else:
+            print("Player 2 wins the game!")
             
         return False
-
-    def compare_cards(card_a, card_b):
-        if card_a > card_b:
-            return 1
-        if card_a == card_b:
-            return 0
-        if card_a < card_b:
-            return -1
-        
-    def initialise_deck():
-        return list(itertools.product(range(2, 15), ['Club', 'Diamond', 'Heart', 'Spade']))
     
-    def shuffle_deck(deck):
-        return random.sample(deck, len(deck))
-        
-    def get_card(deck, card_index):
-        return deck[card_index]
-
-    def deal(deck, players):
-        max_cards = 52
-        player_count = 0
-        
-        for card_index in range(max_cards):
-            if player_count == len(players):
-                player_count = 0
-            
-            current_card = warGame.get_card(deck, card_index)
-            players[player_count].append(current_card)
-            player_count = player_count + 1
-            
-        return players
-
-    def initialise_players(num_players):
-        player_list = []
-        for player in range(num_players):
-            player_list.append(list())
-            
-        return player_list
-    
-    def pop_card(player):
-        if len(player) > 0:
-            player.pop(0)
-            
-        return player
-    
-    def add_card(player, card):
-        player.append(card)
-        return player
-    
-if __name__ == 'main':
-    game_over = False
-    WG = warGame()
-    
-    while WG.play_round != True:
+if __name__ == '__main__':
+    war_card_game = war_game()
+    while war_card_game.play_round(2):
         continue
