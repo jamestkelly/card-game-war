@@ -82,13 +82,23 @@ class war_game:
 
     def compare_cards(self):
         if self.all_cards_equal():
-            return 0
+            return False # It's a tie
 
         battle = list()
         for i in range(len(self.round_cards)):
             battle.append((i, self.round_cards[i]))
 
         sorted_battle = sorted(battle, key=lambda tup: tup[1][0])
+        winner_index = sorted_battle[-1][0]
+        
+        print("Player", winner_index + 1, "wins the round!")
+        
+        self.players[winner_index].extend(self.round_cards)
+        self.players[winner_index].extend(self.buffer)
+        self.buffer = []
+        
+        return True
+        
 
     def all_cards_equal(self):
         value = iter([card[0] for card in self.round_cards])
@@ -99,7 +109,7 @@ class war_game:
         return all(first == val for val in value)
 
     def play_round(self, num_players):
-        if self.win_check(): # Check for a winner
+        if self.win_check() and num_players < 52: # Check for a winner
             return self.game_over()
         
         print("Round #" + str(self.round))

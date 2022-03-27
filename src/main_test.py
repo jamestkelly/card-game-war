@@ -14,7 +14,7 @@ def test_shuffle_deck():
 
 def test_generate_players():
     assert len(wg.generate_players(2)) == 2
-    assert len(wg.generate_players(999)) == 999
+    assert len(wg.generate_players(999)) == 52
     assert len(wg.generate_players(0)) == 0
 
 def test_deal_cards():
@@ -30,20 +30,24 @@ def test_compare_cards():
     assert wg.compare_cards((2, 'Spade'), (3, 'Diamond')) == -1
     
 def test_is_tie():
-    wg.player_one = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
-    wg.player_two = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
+    player_one = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
+    player_two = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
+    wg.players = [player_one, player_two]
     assert wg.is_tie() == None
     
-    wg.player_one = [(3, 'Heart'), (4, 'Heart')]
-    wg.player_two = [(3, 'Heart'), (4, 'Heart')]
+    player_one = [(3, 'Heart'), (4, 'Heart')]
+    player_two = [(3, 'Heart'), (4, 'Heart')]
+    wg.players = [player_one, player_two]
     assert wg.is_tie() == True
     
-    wg.player_one = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
-    wg.player_two = [(3, 'Heart'), (4, 'Heart')]
+    player_one = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
+    player_two = [(3, 'Heart'), (4, 'Heart')]
+    wg.players = [player_one, player_two]
     assert wg.is_tie() == True
     
-    wg.player_one = [(3, 'Heart'), (4, 'Heart')]
-    wg.player_two = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
+    player_one = [(3, 'Heart'), (4, 'Heart')]
+    player_two = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
+    wg.players = [player_one, player_two]
     assert wg.is_tie() == True
     
 def test_tie_default():
@@ -80,3 +84,10 @@ def test_game_over():
     wg.player_one = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
     wg.player_two = []
     assert wg.game_over() == False
+    
+def test_all_cards_equal():
+    wg.round_cards = [(3, 'Heart'), (3, 'Diamond'), (3, 'Club'), (3, 'Spade')]
+    assert wg.all_cards_equal() == True
+    
+    wg.round_cards = [(3, 'Heart'), (4, 'Diamond'), (5, 'Club'), (6, 'Spade')]
+    assert wg.all_cards_equal() == False
