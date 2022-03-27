@@ -14,7 +14,7 @@ def test_shuffle_deck():
 
 def test_generate_players():
     assert len(wg.generate_players(2)) == 2
-    assert len(wg.generate_players(999)) == 999
+    assert len(wg.generate_players(999)) == 52 # Only can produce maximum amount of cards to deal
     assert len(wg.generate_players(0)) == 0
 
 def test_deal_cards():
