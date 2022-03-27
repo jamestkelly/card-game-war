@@ -81,14 +81,11 @@ class war_game:
         
         print("Round #" + str(self.round))
         
-        for i in range(len(self.players)):
-            self.round_cards.append(self.players[i].pop(0))
-        
         card_one, card_two = self.player_one.pop(0), self.player_two.pop(0)
         print("Player 1 plays", card_one, "face up.\tPlayer 2 plays", card_two, "face up.")
         battle_result = self.compare_cards(card_one, card_two)
         
-        match battle_result:
+        match battle_result:    
             case 0: # Tie
                 print("The round is a tie! Initialising tie breaker.")
                 if self.win_check():
