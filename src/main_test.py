@@ -29,22 +29,22 @@ def test_compare_cards():
     assert wg.compare_cards((2, 'Spade'), (2, 'Club')) == 0
     assert wg.compare_cards((2, 'Spade'), (3, 'Diamond')) == -1
     
-def test_tie_check():
+def test_is_tie():
     wg.player_one = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
     wg.player_two = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
-    assert wg.tie_check() == None
+    assert wg.is_tie() == None
     
     wg.player_one = [(3, 'Heart'), (4, 'Heart')]
     wg.player_two = [(3, 'Heart'), (4, 'Heart')]
-    assert wg.tie_check() == True
+    assert wg.is_tie() == True
     
     wg.player_one = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
     wg.player_two = [(3, 'Heart'), (4, 'Heart')]
-    assert wg.tie_check() == True
+    assert wg.is_tie() == True
     
     wg.player_one = [(3, 'Heart'), (4, 'Heart')]
     wg.player_two = [(3, 'Heart'), (4, 'Heart'), (5, 'Heart'), (6, 'Heart'), (7, 'Heart')]
-    assert wg.tie_check() == True
+    assert wg.is_tie() == True
     
 def test_tie_default():
     wg.player_one = [(3, 'Heart'), (4, 'Heart')]

@@ -41,6 +41,7 @@ class war_game:
         self.buffer = []
         self.round = 1
         self.players = players
+        self.round_winner = None # Default winner of the round at start is no one
 
     def generate_deck(self):
         deck = list(itertools.product(range(2, 15), ['Spade', 'Heart', 'Diamond', 'Club']))
@@ -75,6 +76,28 @@ class war_game:
         if card_a[0] < card_b[0]:
             return -1
     
+    def print_cards(self):
+        for i in range(len(self.round_cards)):
+            print("Player", i + 1, "draws", self.round_cards(i))
+
+    def compare_cards(self):
+        if self.all_cards_equal():
+            return 0
+
+        battle = list()
+        for i in range(len(self.round_cards)):
+            battle.append((i, self.round_cards[i]))
+
+        sorted_battle = sorted(battle, key=lambda tup: tup[1][0])
+
+    def all_cards_equal(self):
+        value = iter([card[0] for card in self.round_cards])
+        try:
+            first = next(value)
+        except StopIteration:
+            return True
+        return all(first == val for val in value)
+
     def play_round(self, num_players):
         if self.win_check(): # Check for a winner
             return self.game_over()
@@ -84,8 +107,10 @@ class war_game:
         for i in range(len(self.players)):
             self.round_cards.append(self.players[i].pop(0))
         
-        card_one, card_two = self.player_one.pop(0), self.player_two.pop(0)
-        print("Player 1 plays", card_one, "face up.\tPlayer 2 plays", card_two, "face up.")
+        self.print_cards()
+
+        #card_one, card_two = self.player_one.pop(0), self.player_two.pop(0)
+        #print("Player 1 plays", card_one, "face up.\tPlayer 2 plays", card_two, "face up.")
         battle_result = self.compare_cards(card_one, card_two)
         
         match battle_result:
@@ -94,7 +119,7 @@ class war_game:
                 if self.win_check():
                     return self.game_over()
                 
-                if self.tie_check():
+                if self.is_tie():
                     return self.tie_default()
                 
                 temp_buffer = list()
@@ -125,9 +150,10 @@ class war_game:
         self.round = self.round + 1 # Increment the round counter
         return True
     
-    def tie_check(self):
-        if len(self.player_one) < 4 or len(self.player_two) < 4:
-            return True
+    def is_tie(self):
+        for player in self.players:
+            if len(player) < 4:
+                return True
         
     def tie_default(self):
         if len(self.player_two) < len(self.player_one):
