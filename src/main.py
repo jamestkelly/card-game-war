@@ -1,4 +1,5 @@
-'''---------------------------------------------------------------------
+'''
+------------------------------------------------------------------------
 Card Game War
 Scenario by: Patrick, R.
 Solution by: Jim, K.
@@ -21,64 +22,61 @@ Base Game Rules
 - The player that runs out of cards first loses. [X]
 ------------------------------------------------------------------------
 Extended Game Rules
-- The game can be played with N players [ ]
+- The game can be played with N players [X]
 - If you capture a King (13), then all players must give you 4 extra
     cards. [ ]
 - If you capture a Queen (12), then you must give all opponents 4 extra
     cards. [ ]
 - If a King takes a Queen of the same suit, then that player wins. [ ]
-------------------------------------------------------------------------'''
+------------------------------------------------------------------------
+Additional Rule by Jim
+- If the game exceeds `max_turns` then the player with the most cards
+    wins. [ ]
+------------------------------------------------------------------------
+'''
 
 import itertools, random
 
 class war_game:
     def __init__(self):
+        self.num_players = 4
         deck = self.generate_deck()
         random.shuffle(deck)
-        players = self.deal_cards(deck, 2)
-        self.player_one, self.player_two = players[0], players[1]
+        self.players = self.deal_cards(deck)
         self.round_cards = []
+        self.round_players = []
         self.buffer = []
         self.round = 1
-        self.players = players
         self.round_winner = None # Default winner of the round at start is no one
 
     def generate_deck(self):
         deck = list(itertools.product(range(2, 15), ['Spade', 'Heart', 'Diamond', 'Club']))
         return sorted(deck, key=lambda tup: tup[0])
     
-    def generate_players(self, num_players):
+    def generate_players(self):
         players = []
-        for i in range(num_players):
+        for i in range(self.num_players):
             if i < 52: # Edge case where more players than cards are entered
-                players.append(list())
+                players.append((i, list()))
             
         return players
     
-    def deal_cards(self, deck, num_players):
+    def deal_cards(self, deck):
         player_ID = 0 # Initialise player to be dealt to as Player 1, index 0
-        players = self.generate_players(num_players)
+        players = self.generate_players()
         
         for card in deck:
-            if player_ID == num_players:
+            if player_ID == self.num_players:
                 player_ID = 0 # Reset player to be dealt to
             
-            players[player_ID].append(card)
+            players[player_ID][1].append(card)
             player_ID = player_ID + 1
             
         return players
-    
-    def compare_cards(self, card_a, card_b):
-        if card_a[0] > card_b[0]:
-            return 1
-        if card_a[0] == card_b[0]:
-            return 0
-        if card_a[0] < card_b[0]:
-            return -1
-    
+
     def print_cards(self):
         for i in range(len(self.round_cards)):
-            print("Player", i + 1, "draws", self.round_cards(i))
+            print("Player", i, "draws", self.round_cards[i])
 
     def compare_cards(self):
         if self.all_cards_equal():
@@ -86,19 +84,18 @@ class war_game:
 
         battle = list()
         for i in range(len(self.round_cards)):
-            battle.append((i, self.round_cards[i]))
+            battle.append((self.round_players[i], self.round_cards[i]))
 
         sorted_battle = sorted(battle, key=lambda tup: tup[1][0])
         winner_index = sorted_battle[-1][0]
-        
         print("Player", winner_index + 1, "wins the round!")
-        
-        self.players[winner_index].extend(self.round_cards)
-        self.players[winner_index].extend(self.buffer)
+        self.players[winner_index][1].extend(self.round_cards)
+        self.players[winner_index][1].extend(self.buffer)
         self.buffer = []
+        self.round_players = []
+        self.round_cards = []
         
         return True
-        
 
     def all_cards_equal(self):
         value = iter([card[0] for card in self.round_cards])
@@ -107,90 +104,104 @@ class war_game:
         except StopIteration:
             return True
         return all(first == val for val in value)
-
-    def play_round(self, num_players):
-        if self.win_check() and num_players < 52: # Check for a winner
+    
+    def remove_player(self, player_id):
+        for i in range(len(self.players)):
+            if self.players[i][0] == player_id:
+                self.players.pop(i)
+            break
+    
+    def eliminate_players(self):
+        check = 0
+        for i in range(len(self.players)):
+            if len(self.players[i][1]) != 0 and self.players[i][1] != []:
+                check = check + 1
+        
+        if check > 1:
+            players_eliminated = []
+            for i in range(len(self.players)):
+                if len(self.players[i][1]) == 0:
+                    print("Player", i, "was eliminated!")
+                    players_eliminated.append(i)
+                    
+            for loser in players_eliminated:
+                self.remove_player(loser)
+                    
+    def play_round(self):
+        self.eliminate_players()
+        if self.win_check() and self.num_players < 52: # Check for a winner
             return self.game_over()
         
         print("Round #" + str(self.round))
         
         for i in range(len(self.players)):
-            self.round_cards.append(self.players[i].pop(0))
+            if len(self.players[i][1]) >= 1:
+                self.round_cards.append(self.players[i][1].pop(0))
+                self.round_players.append(i)
         
         self.print_cards()
+        battle_result = self.compare_cards()
 
-        #card_one, card_two = self.player_one.pop(0), self.player_two.pop(0)
-        #print("Player 1 plays", card_one, "face up.\tPlayer 2 plays", card_two, "face up.")
-        battle_result = self.compare_cards(card_one, card_two)
-        
-        match battle_result:
-            case 0: # Tie
-                print("The round is a tie! Initialising tie breaker.")
-                if self.win_check():
-                    return self.game_over()
-                
-                if self.is_tie():
-                    return self.tie_default()
-                
-                temp_buffer = list()
-                for i in range(3):
-                    for player in range(num_players):
-                        if player == 0:
-                            card = self.player_one.pop(0)
-                        elif player == 1:
-                            card = self.player_two.pop(0)
+        if (battle_result != True):
+            print("The round is a tie!")
+            if self.win_check():
+                return self.game_over()
+            
+            if self.is_too_few_cards():
+                return self.tie_default()
+            
+            return self.play_round()
 
-                        temp_buffer.append(card)
-                
-                print("Player 1 & 2 place three cards face down.")
-                self.buffer.extend(temp_buffer)
-                return self.play_round(num_players)
-                
-            case 1: # Player 1 wins the round
-                print("Player 1 wins the round!")
-                self.player_one.extend([card_one, card_two])
-                self.player_one.extend(self.buffer)
-                self.buffer = []
-            case -1: # Player 2 wins the round
-                print("Player 2 wins the round!")
-                self.player_two.extend([card_one, card_two])
-                self.player_two.extend(self.buffer)
-                self.buffer = []
-        
         self.round = self.round + 1 # Increment the round counter
         return True
     
-    def is_tie(self):
+    def tie_breaker(self):
+        for i in range(3):
+            for j in range(len(self.players)):
+                if self.players[j][1] != None:
+                    card = self.players[j][1].pop(0)
+                    self.buffer.append(card)
+    
+    def is_too_few_cards(self):
         for player in self.players:
-            if len(player) < 4:
+            if len(player[1]) < 4:
                 return True
         
     def tie_default(self):
-        if len(self.player_two) < len(self.player_one):
-            print("Player 2 does not have enough cards to tie break. Player 1 wins by default!")
-        elif len(self.player_two) > len(self.player_one):
-            print("Player 1 does not have enough cards to tie break. Player 2 wins by default!")
-        else:
-            print("It's a tie!")
-
+        for i in range(len(self.players)):
+            if len(self.players[i][1]) < 4:
+                print("Player", self.players[i][0], "does not have enough" \
+                        + " cards to continue, they have been eliminated.")
+                for j in range(len(self.players[i][1])):
+                    self.buffer.append(self.players[i][1][j])
+                    
+                self.players.pop(i)
+        
         return False
     
     def win_check(self):
-        if len(self.player_one) == 0 or len(self.player_two) == 0:
+        player_count = 0
+        for i in range(len(self.players)):
+            if len(self.players[i][1]) >= 1:
+                player_count = player_count + 1
+                
+        if player_count == 1:
             return True
+        else:
+            return False
         
     def game_over(self):
-        if len(self.player_two) == 0:
-            if len(self.player_one) == 0:
-                print("The game is a tie!")
-            else:
-                print("Player 1 wins the game!")
-        else:
-            print("Player 2 wins the game!")
+        for i in range(len(self.players)):
+            if len(self.players[i][1]) >= 1:
+                print("Player", self.players[i][0], "wins!")
+                return False
             
+        print("The game is a tie!")
+        
         return False
     
 if __name__ == '__main__':
+    
     war_card_game = war_game()
-    while war_card_game.play_round(2):
+    while war_card_game.play_round():
         continue
